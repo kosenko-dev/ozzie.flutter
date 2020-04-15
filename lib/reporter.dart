@@ -58,6 +58,7 @@ class Reporter {
           .map((s) => s.path.replaceAll("$rootFolderName", ''))
           .where((s) => s.endsWith('png'))
           .toList();
+      screenshots.sort();
       final performanceReports = _getPerformanceReportForFeature(
         rootFolderName,
         featureDirectory,
