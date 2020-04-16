@@ -142,6 +142,7 @@ class Reporter {
     OzzieReport report,
   ) {
     final randomId = _accordionId(report.reportName);
+    print("AccordionId = $randomId");
     return """
 <div class="card">
   <div class="card-header" id="heading$randomId">
@@ -186,12 +187,17 @@ class Reporter {
     return """
 <nav>
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <a class="nav-item nav-link" id="nav-logs-$accordionId-tab" data-toggle="tab" href="#nav-logs-$accordionId" role="tab" aria-controls="nav-logs-$accordionId" aria-selected="false">Test Logs</a>
     <a class="nav-item nav-link active" id="nav-screenshots-$accordionId-tab" data-toggle="tab" href="#nav-screenshots-$accordionId" role="tab" aria-controls="nav-screenshots-$accordionId" aria-selected="true">Screenshots</a>
     <a class="nav-item nav-link" id="nav-performance-$accordionId-tab" data-toggle="tab" href="#nav-performance-$accordionId" role="tab" aria-controls="nav-performance-$accordionId" aria-selected="false">Performance</a>
-    <a class="nav-item nav-link" id="nav-logs-$accordionId-tab" data-toggle="tab" href="#nav-logs-$accordionId" role="tab" aria-controls="nav-logs-$accordionId" aria-selected="false">Test Logs</a>
   </div>
 </nav>
 <div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade" id="nav-logs-$accordionId" role="tabpanel" aria-labelledby="nav-logs-$accordionId-tab">
+    <p>
+      $logsHtmlSnippet
+    </p>
+  </div>
   <div class="tab-pane fade show active" id="nav-screenshots-$accordionId" role="tabpanel" aria-labelledby="nav-screenshots-$accordionId-tab">
     <p>
       $screenshotsHtmlSnippet
@@ -202,30 +208,18 @@ class Reporter {
       $performanceHtmlSnippet
     </p>
   </div>
-  <div class="tab-pane fade" id="nav-logs-$accordionId" role="tabpanel" aria-labelledby="nav-logs-$accordionId-tab">
-    <p>
-      $logsHtmlSnippet
-    </p>
-  </div>
 </div>
     """;
   }
 
   String _buildLog(List<TestLogEntry> logs) {
-//    var logsListBuffer = StringBuffer();
-//    var i = 1;
-//    logs.forEach((logEntry) {
-//      logsListBuffer.write("""<li class="list-group-item">[${logEntry.status}] #${i++} ${logEntry.message}</li>""");
-//    });
-//    final logsList = logsListBuffer.toString();
-//    return '<ul class="list-group">$logsList</ul>';
     var logsListBuffer = StringBuffer();
-    int i = 1;
+    var i = 1;
     logs.forEach((logEntry) {
-      logsListBuffer.write("""[${logEntry.status}] #${i++} ${logEntry.message}<br/>""");
+      logsListBuffer.write("""<li class="list-group-item">[${logEntry.status}] #${i++} ${logEntry.message}</li>""");
     });
     final logsList = logsListBuffer.toString();
-    return logsList;
+    return '<ul class="list-group">$logsList</ul>';
   }
 
   String _buildImages(List<String> images) {
@@ -396,7 +390,7 @@ class Reporter {
   }
 
   String _accordionId(String accordionName) =>
-      '${accordionName.trim().replaceAll(' ', '_').replaceAll('/', '_')}${accordionName.length}';
+      '${accordionName.trim().replaceAll(' ', '_').replaceAll('/', '_').replaceAll('\\', '_')}${accordionName.length}';
 
   String _modalId(String accordionName) =>
       "${_displayName(accordionName)}Modal";
