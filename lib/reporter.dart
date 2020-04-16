@@ -1,18 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:meta/meta.dart';
 import 'package:ozzie/html_report.dart';
+import 'package:ozzie/models/test_log_entry.dart';
 
 import 'models/models.dart';
-import 'performance_scorer.dart';
 import 'performance_configuration_provider.dart';
+import 'performance_scorer.dart';
 
 /// [Reporter] is the class in charge of actually generating the HTML report.
 class Reporter {
   /// This method is what generates the HTML report with the given
   /// `rootFolderName`.
-  /// It should only be called after all the screnshots have been taken,
+  /// It should only be called after all the screenshots have been taken,
   /// so the reporter can inspect the given `rootFolderName` and generate
   /// the proper HTML code. That's why, calling this method from
   /// `Ozzie.generateHtmlReport` is ideal.
@@ -53,6 +55,7 @@ class Reporter {
     final scoreConfiguration = await PerformanceConfigurationProvider.provide();
     final performanceScorer = PerformanceScorer(scoreConfiguration);
     featureDirectories.forEach((featureDirectory) {
+      final testLogEntries = json.decode(File('${featureDirectory.path}/logs.json').readAsStringSync());
       final screenshots = featureDirectory
           .listSync(recursive: false, followLinks: false)
           .map((s) => s.path.replaceAll("$rootFolderName", ''))
@@ -70,6 +73,7 @@ class Reporter {
       );
       final report = OzzieReport(
         reportName: featureDirectory.path,
+        testLogEntries: testLogEntries,
         screenshots: screenshots,
         performanceReports: performanceReports,
         performanceScore: score,
@@ -170,23 +174,29 @@ class Reporter {
   </div>
   <div id="collapse$randomId" class="collapse" aria-labelledby="heading$randomId" data-parent="#ozzieAccordion">
     <div class="card-body">
-      ${_buildScreenshotsAndPerformanceTabs(randomId, _buildImages(report.screenshots), _buildPerformanceReport(randomId, report.performanceReports))}
+      ${_buildScreenshotsAndPerformanceTabs(randomId, _buildLog(report.testLogEntries), _buildImages(report.screenshots), _buildPerformanceReport(randomId, report.performanceReports))}
     </div>
   </div>
 </div>
     """;
   }
 
-  String _buildScreenshotsAndPerformanceTabs(String accordionId,
+  String _buildScreenshotsAndPerformanceTabs(String accordionId, String logsHtmlSnippet,
       String screenshotsHtmlSnippet, String performanceHtmlSnippet) {
     return """
 <nav>
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <a class="nav-item nav-link" id="nav-logs-$accordionId-tab" data-toggle="tab" href="#nav-logs-$accordionId" role="tab" aria-controls="nav-logs-$accordionId" aria-selected="true">Test Logs</a>
     <a class="nav-item nav-link active" id="nav-screenshots-$accordionId-tab" data-toggle="tab" href="#nav-screenshots-$accordionId" role="tab" aria-controls="nav-screenshots-$accordionId" aria-selected="true">Screenshots</a>
     <a class="nav-item nav-link" id="nav-performance-$accordionId-tab" data-toggle="tab" href="#nav-performance-$accordionId" role="tab" aria-controls="nav-performance-$accordionId" aria-selected="false">Performance</a>
   </div>
 </nav>
 <div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade" id="nav-logs-$accordionId" role="tabpanel" aria-labelledby="nav-logs-$accordionId-tab">
+    <p>
+      $logsHtmlSnippet
+    </p>
+  </div>
   <div class="tab-pane fade show active" id="nav-screenshots-$accordionId" role="tabpanel" aria-labelledby="nav-screenshots-$accordionId-tab">
     <p>
       $screenshotsHtmlSnippet
@@ -199,6 +209,16 @@ class Reporter {
   </div>
 </div>
     """;
+  }
+
+  String _buildLog(List<TestLogEntry> logs) {
+    var logsListBuffer = StringBuffer();
+    var i = 1;
+    logs.forEach((logEntry) {
+      logsListBuffer.write("""<li class="list-group-item">[${logEntry.status}] #$i ${logEntry.message}</li>""");
+    });
+    final logsList = logsListBuffer.toString();
+    return '<ul class="list-group">$logsList</ul>';
   }
 
   String _buildImages(List<String> images) {

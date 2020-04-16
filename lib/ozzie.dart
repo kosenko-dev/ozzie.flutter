@@ -1,9 +1,13 @@
 library ozzie;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
-import 'package:meta/meta.dart';
+
 import 'package:flutter_driver/flutter_driver.dart';
+import 'package:meta/meta.dart';
+import 'package:ozzie/models/test_log_entry.dart';
+
 import 'reporter.dart';
 import 'zip_generator.dart';
 
@@ -14,12 +18,14 @@ const rootFolderName = "ozzie";
 class Ozzie {
   final FlutterDriver driver;
   final String groupName;
+  final List<TestLogEntry> testLogEntries;
   final bool shouldTakeScreenshots;
   var _doesGroupFolderNeedToBeDeleted = true;
 
   Ozzie._internal(
     this.driver, {
     @required this.groupName,
+    @required this.testLogEntries,
     @required this.shouldTakeScreenshots,
   }) : assert(driver != null);
 
@@ -43,10 +49,11 @@ class Ozzie {
       Ozzie._internal(
         driver,
         groupName: groupName,
+        testLogEntries: List<TestLogEntry>(),
         shouldTakeScreenshots: shouldTakeScreenshots,
       );
 
-  /// It takes a an PNG screnshot of the given state of the application when
+  /// It takes a an PNG screenshot of the given state of the application when
   /// being called. The name of the screenshot will be the given `screenshotName`
   /// prefixed by the timestamp of that moment, and suffixed by `.png`.
   /// It will be stored in a folder whose name will be the given `groupName`
@@ -73,6 +80,7 @@ class Ozzie {
     if (!await Directory(_groupFolderName).exists()) {
       await Directory(_groupFolderName).create(recursive: true);
     }
+    await _serializeLogs();
     await _generateZipFiles();
     final reporter = Reporter();
     await reporter.generateHtmlReport(
@@ -102,6 +110,12 @@ class Ozzie {
       destinationDirectory: 'ozzie/$groupName/profiling',
       pretty: true,
     );
+  }
+
+  Future<File> _serializeLogs() async {
+    return File('ozzie/$groupName/logs.json')
+      ..createSync(recursive: true)
+      ..writeAsString(json.encode(testLogEntries));
   }
 
   Future _generateZipFiles() async {
