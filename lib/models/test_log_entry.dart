@@ -5,4 +5,16 @@ class TestLogEntry {
   final String message;
 
   TestLogEntry({@required this.status, @required this.message});
+
+  factory TestLogEntry.fromJson(Map<String, dynamic> parsedJson){
+    return TestLogEntry(
+      status: parsedJson['status'],
+      message : parsedJson['message'],
+    );
+  }
+
+  Map toJson() => {
+    'status': status,
+    'message': message,
+  };
 }
