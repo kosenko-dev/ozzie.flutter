@@ -175,29 +175,23 @@ class Reporter {
   </div>
   <div id="collapse$randomId" class="collapse" aria-labelledby="heading$randomId" data-parent="#ozzieAccordion">
     <div class="card-body">
-      ${_buildScreenshotsAndPerformanceTabs(randomId, _buildLog(report.testLogEntries), _buildImages(report.screenshots), _buildPerformanceReport(randomId, report.performanceReports))}
+      ${_buildScreenshotsAndPerformanceTabs(randomId, _buildImages(report.screenshots), _buildPerformanceReport(randomId, report.performanceReports), _buildLog(report.testLogEntries),)}
     </div>
   </div>
 </div>
     """;
   }
 
-  String _buildScreenshotsAndPerformanceTabs(String accordionId, String logsHtmlSnippet,
-      String screenshotsHtmlSnippet, String performanceHtmlSnippet) {
+  String _buildScreenshotsAndPerformanceTabs(String accordionId, String screenshotsHtmlSnippet, String performanceHtmlSnippet, String logsHtmlSnippet) {
     return """
 <nav>
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <a class="nav-item nav-link" id="nav-logs-$accordionId-tab" data-toggle="tab" href="#nav-logs-$accordionId" role="tab" aria-controls="nav-logs-$accordionId" aria-selected="false">Test Logs</a>
     <a class="nav-item nav-link active" id="nav-screenshots-$accordionId-tab" data-toggle="tab" href="#nav-screenshots-$accordionId" role="tab" aria-controls="nav-screenshots-$accordionId" aria-selected="true">Screenshots</a>
     <a class="nav-item nav-link" id="nav-performance-$accordionId-tab" data-toggle="tab" href="#nav-performance-$accordionId" role="tab" aria-controls="nav-performance-$accordionId" aria-selected="false">Performance</a>
+    <a class="nav-item nav-link" id="nav-logs-$accordionId-tab" data-toggle="tab" href="#nav-logs-$accordionId" role="tab" aria-controls="nav-logs-$accordionId" aria-selected="false">Test Logs</a>
   </div>
 </nav>
 <div class="tab-content" id="nav-tabContent">
-  <div class="tab-pane fade" id="nav-logs-$accordionId" role="tabpanel" aria-labelledby="nav-logs-$accordionId-tab">
-    <p>
-      $logsHtmlSnippet
-    </p>
-  </div>
   <div class="tab-pane fade show active" id="nav-screenshots-$accordionId" role="tabpanel" aria-labelledby="nav-screenshots-$accordionId-tab">
     <p>
       $screenshotsHtmlSnippet
@@ -208,18 +202,30 @@ class Reporter {
       $performanceHtmlSnippet
     </p>
   </div>
+  <div class="tab-pane fade" id="nav-logs-$accordionId" role="tabpanel" aria-labelledby="nav-logs-$accordionId-tab">
+    <p>
+      $logsHtmlSnippet
+    </p>
+  </div>
 </div>
     """;
   }
 
   String _buildLog(List<TestLogEntry> logs) {
+//    var logsListBuffer = StringBuffer();
+//    var i = 1;
+//    logs.forEach((logEntry) {
+//      logsListBuffer.write("""<li class="list-group-item">[${logEntry.status}] #${i++} ${logEntry.message}</li>""");
+//    });
+//    final logsList = logsListBuffer.toString();
+//    return '<ul class="list-group">$logsList</ul>';
     var logsListBuffer = StringBuffer();
-    var i = 1;
+    int i = 1;
     logs.forEach((logEntry) {
-      logsListBuffer.write("""<li class="list-group-item">[${logEntry.status}] #${i++} ${logEntry.message}</li>""");
+      logsListBuffer.write("""[${logEntry.status}] #${i++} ${logEntry.message}<br/>""");
     });
     final logsList = logsListBuffer.toString();
-    return '<ul class="list-group">$logsList</ul>';
+    return logsList;
   }
 
   String _buildImages(List<String> images) {
