@@ -53,6 +53,10 @@ class Ozzie {
         shouldTakeScreenshots: shouldTakeScreenshots,
       );
 
+  void saveLogEntry(String status, String message) {
+    testLogEntries.add(TestLogEntry(status: status, message: message));
+  }
+
   /// It takes a an PNG screenshot of the given state of the application when
   /// being called. The name of the screenshot will be the given `screenshotName`
   /// prefixed by the timestamp of that moment, and suffixed by `.png`.
