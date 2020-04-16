@@ -187,7 +187,7 @@ class Reporter {
     return """
 <nav>
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <a class="nav-item nav-link" id="nav-logs-$accordionId-tab" data-toggle="tab" href="#nav-logs-$accordionId" role="tab" aria-controls="nav-logs-$accordionId" aria-selected="true">Test Logs</a>
+    <a class="nav-item nav-link" id="nav-logs-$accordionId-tab" data-toggle="tab" href="#nav-logs-$accordionId" role="tab" aria-controls="nav-logs-$accordionId" aria-selected="false">Test Logs</a>
     <a class="nav-item nav-link active" id="nav-screenshots-$accordionId-tab" data-toggle="tab" href="#nav-screenshots-$accordionId" role="tab" aria-controls="nav-screenshots-$accordionId" aria-selected="true">Screenshots</a>
     <a class="nav-item nav-link" id="nav-performance-$accordionId-tab" data-toggle="tab" href="#nav-performance-$accordionId" role="tab" aria-controls="nav-performance-$accordionId" aria-selected="false">Performance</a>
   </div>
