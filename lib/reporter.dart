@@ -216,7 +216,7 @@ class Reporter {
     var logsListBuffer = StringBuffer();
     var i = 1;
     logs.forEach((logEntry) {
-      logsListBuffer.write("""<li class="list-group-item">[${logEntry.status}] #$i ${logEntry.message}</li>""");
+      logsListBuffer.write("""<li class="list-group-item">[${logEntry.status}] #${i++} ${logEntry.message}</li>""");
     });
     final logsList = logsListBuffer.toString();
     return '<ul class="list-group">$logsList</ul>';
