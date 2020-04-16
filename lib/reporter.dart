@@ -55,7 +55,8 @@ class Reporter {
     final scoreConfiguration = await PerformanceConfigurationProvider.provide();
     final performanceScorer = PerformanceScorer(scoreConfiguration);
     featureDirectories.forEach((featureDirectory) {
-      final testLogEntries = json.decode(File('${featureDirectory.path}/logs.json').readAsStringSync());
+      Iterable jsonArray = json.decode(File('${featureDirectory.path}/logs.json').readAsStringSync());
+      final testLogEntries = jsonArray.map((parsedJson) => TestLogEntry.fromJson(parsedJson)).toList();
       final screenshots = featureDirectory
           .listSync(recursive: false, followLinks: false)
           .map((s) => s.path.replaceAll("$rootFolderName", ''))
