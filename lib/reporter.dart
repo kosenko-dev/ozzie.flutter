@@ -194,7 +194,7 @@ class Reporter {
 </nav>
 <div class="tab-content" id="nav-tabContent">
   <div class="tab-pane fade" id="nav-logs-$accordionId" role="tabpanel" aria-labelledby="nav-logs-$accordionId-tab">
-    <p class="text-monospace">
+    <p>
       $logsHtmlSnippet
     </p>
   </div>
@@ -227,7 +227,7 @@ class Reporter {
     var logsListBuffer = StringBuffer();
     var i = 1;
     logs.forEach((logEntry) {
-      logsListBuffer.write("""<li class="list-group-item ${_mapStatusToLiType(logEntry.status)}">[${logEntry.status}] #${i++} ${_formatMessage(logEntry.message)}</li>""");
+      logsListBuffer.write("""<li class="list-group-item ${_mapStatusToLiType(logEntry.status)}"><p class="text-monospace">[${logEntry.status}] #${i++} ${_formatMessage(logEntry.message)}</p></li>""");
     });
     final logsList = logsListBuffer.toString();
     return '<ul class="list-group">$logsList</ul>';
