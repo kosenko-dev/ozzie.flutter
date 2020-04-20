@@ -194,7 +194,7 @@ class Reporter {
 </nav>
 <div class="tab-content" id="nav-tabContent">
   <div class="tab-pane fade" id="nav-logs-$accordionId" role="tabpanel" aria-labelledby="nav-logs-$accordionId-tab">
-    <p>
+    <p class="text-monospace">
       $logsHtmlSnippet
     </p>
   </div>
