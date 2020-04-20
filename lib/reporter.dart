@@ -212,11 +212,19 @@ class Reporter {
     """;
   }
 
+  String _mapStatusToLiType(String status) {
+    switch(status.toLowerCase()) {
+      case "passed" : return "list-group-item-success";
+      case "error" : return "list-group-item-danger";
+      default : return "";
+    }
+  }
+
   String _buildLog(List<TestLogEntry> logs) {
     var logsListBuffer = StringBuffer();
     var i = 1;
     logs.forEach((logEntry) {
-      logsListBuffer.write("""<li class="list-group-item">[${logEntry.status}] #${i++} ${logEntry.message}</li>""");
+      logsListBuffer.write("""<li class="list-group-item ${_mapStatusToLiType(logEntry.status)}">[${logEntry.status}] #${i++} ${logEntry.message}</li>""");
     });
     final logsList = logsListBuffer.toString();
     return '<ul class="list-group">$logsList</ul>';
