@@ -219,12 +219,15 @@ class Reporter {
       default : return "";
     }
   }
+  String _formatMessage(String message) {
+    return message.replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;");
+  }
 
   String _buildLog(List<TestLogEntry> logs) {
     var logsListBuffer = StringBuffer();
     var i = 1;
     logs.forEach((logEntry) {
-      logsListBuffer.write("""<li class="list-group-item ${_mapStatusToLiType(logEntry.status)}">[${logEntry.status}] #${i++} ${logEntry.message}</li>""");
+      logsListBuffer.write("""<li class="list-group-item ${_mapStatusToLiType(logEntry.status)}">[${logEntry.status}] #${i++} ${_formatMessage(logEntry.message)}</li>""");
     });
     final logsList = logsListBuffer.toString();
     return '<ul class="list-group">$logsList</ul>';
