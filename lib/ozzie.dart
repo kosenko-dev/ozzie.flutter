@@ -1,6 +1,7 @@
 library ozzie;
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,6 +9,7 @@ import 'package:flutter_driver/flutter_driver.dart';
 import 'package:meta/meta.dart';
 import 'package:ozzie/models/test_log_entry.dart';
 
+import 'models/test_log_entry.dart';
 import 'reporter.dart';
 import 'zip_generator.dart';
 
@@ -18,14 +20,16 @@ const rootFolderName = "ozzie";
 class Ozzie {
   final FlutterDriver driver;
   final String groupName;
-  final List<TestLogEntry> testLogEntries;
+  static const String undefindedSteps = "Не выделенные в тест шаги";
+  String currentTestName = undefindedSteps;
+  final LinkedHashMap<String, List<TestLogEntry>> testLogEntriesMap;
   final bool shouldTakeScreenshots;
   var _doesGroupFolderNeedToBeDeleted = true;
 
   Ozzie._internal(
     this.driver, {
     @required this.groupName,
-    @required this.testLogEntries,
+    @required this.testLogEntriesMap,
     @required this.shouldTakeScreenshots,
   }) : assert(driver != null);
 
@@ -49,12 +53,14 @@ class Ozzie {
       Ozzie._internal(
         driver,
         groupName: groupName,
-        testLogEntries: List<TestLogEntry>(),
+        testLogEntriesMap: LinkedHashMap<String, List<TestLogEntry>>
+            .of(<String, List<TestLogEntry>>{ undefindedSteps : List<TestLogEntry>()}),
         shouldTakeScreenshots: shouldTakeScreenshots,
       );
 
   void saveLogEntry(String status, String message) {
-    testLogEntries.add(TestLogEntry(status: status, message: message));
+    testLogEntriesMap[currentTestName]
+        .add(TestLogEntry(status: status, message: message));
   }
 
   /// It takes a an PNG screenshot of the given state of the application when
@@ -84,7 +90,14 @@ class Ozzie {
     if (!await Directory(_groupFolderName).exists()) {
       await Directory(_groupFolderName).create(recursive: true);
     }
-    await _serializeLogs();
+    File('ozzie/$groupName/test_group.json')
+      ..createSync(recursive: true)
+      ..writeAsString(json
+          .encode(testLogEntriesMap
+                    .keys.toList()));
+    testLogEntriesMap.forEach((key, value) {
+      _serializeLogs(key, value);
+    });
     await _generateZipFiles();
     final reporter = Reporter();
     await reporter.generateHtmlReport(
@@ -99,9 +112,9 @@ class Ozzie {
   /// given `reportName` into your `groupName` folder, under a new
   /// folder named "profiling"
   Future<void> profilePerformance(
-    String reportName,
-    Future<dynamic> body(),
-  ) async {
+      String reportName,
+      Future<dynamic> body(),
+      ) async {
     final timeline = await driver.traceAction(() async => await body());
     final summary = TimelineSummary.summarize(timeline);
     await summary.writeSummaryToFile(
@@ -116,8 +129,20 @@ class Ozzie {
     );
   }
 
-  Future<File> _serializeLogs() async {
-    return File('ozzie/$groupName/logs.json')
+  Future<void> test(
+      String testName,
+      Future<dynamic> body(),
+      ) async {
+
+    testLogEntriesMap[testName] = List<TestLogEntry>();
+
+    currentTestName = testName;
+    await body();
+    currentTestName = undefindedSteps;
+  }
+
+  void _serializeLogs(String testName, List<TestLogEntry> testLogEntries) {
+    File('ozzie/$groupName/logs_$testName.json')
       ..createSync(recursive: true)
       ..writeAsString(json.encode(testLogEntries));
   }
@@ -143,7 +168,7 @@ class Ozzie {
 
   String get _timestamp => DateTime.now().toIso8601String().replaceAll(':', '-');
 
-  String _fileName(String screenshotName) => '$_timestamp-$screenshotName.png';
+  String _fileName(String screenshotName) => '$_timestamp-${screenshotName.replaceAll(':', ' ')}.png';
 
   String _filePath(String screenshotName) {
     final fileName = _fileName(screenshotName);

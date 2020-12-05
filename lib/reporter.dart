@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -55,14 +56,24 @@ class Reporter {
     final scoreConfiguration = await PerformanceConfigurationProvider.provide();
     final performanceScorer = PerformanceScorer(scoreConfiguration);
     featureDirectories.forEach((featureDirectory) {
-      Iterable jsonArray = json.decode(File('${featureDirectory.path}/logs.json').readAsStringSync());
-      final testLogEntries = jsonArray.map((parsedJson) => TestLogEntry.fromJson(parsedJson)).toList();
+      List<String> testNamesList = (json.decode(
+          File('${featureDirectory.path}/test_group.json').readAsStringSync())
+            as List<dynamic>).cast<String>();
+      var testLogEntriesMap = LinkedHashMap<String, List<TestLogEntry>>();
+      testNamesList.forEach((element) {
+        Iterable jsonArray = json.decode(
+            File('${featureDirectory.path}/logs_$element.json').readAsStringSync());
+        testLogEntriesMap[element] = jsonArray.map((parsedJson) =>
+            TestLogEntry.fromJson(parsedJson)).toList();
+      });
+
       final screenshots = featureDirectory
           .listSync(recursive: false, followLinks: false)
           .map((s) => s.path.replaceAll("$rootFolderName", ''))
           .where((s) => s.endsWith('png'))
           .toList();
       screenshots.sort();
+
       final performanceReports = _getPerformanceReportForFeature(
         rootFolderName,
         featureDirectory,
@@ -74,7 +85,7 @@ class Reporter {
       );
       final report = OzzieReport(
         reportName: featureDirectory.path,
-        testLogEntries: testLogEntries,
+        testLogEntriesMap: testLogEntriesMap,
         screenshots: screenshots,
         performanceReports: performanceReports,
         performanceScore: score,
@@ -176,7 +187,7 @@ class Reporter {
   </div>
   <div id="collapse$randomId" class="collapse" aria-labelledby="heading$randomId" data-parent="#ozzieAccordion">
     <div class="card-body">
-      ${_buildScreenshotsAndPerformanceTabs(randomId, _buildImages(report.screenshots), _buildPerformanceReport(randomId, report.performanceReports), _buildLog(report.testLogEntries),)}
+      ${_buildScreenshotsAndPerformanceTabs(randomId, _buildImages(report.screenshots), _buildPerformanceReport(randomId, report.performanceReports), _buildLogs(report.testLogEntriesMap),)}
     </div>
   </div>
 </div>
@@ -214,8 +225,8 @@ class Reporter {
 
   String _mapStatusToLiType(String status) {
     switch(status.toLowerCase()) {
-      case "passed" : return "list-group-item-success";
-      case "error" : return "list-group-item-danger";
+      case "пройден" : return "list-group-item-success";
+      case "ошибка" : return "list-group-item-danger";
       default : return "";
     }
   }
@@ -223,13 +234,24 @@ class Reporter {
     return message.replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;");
   }
 
-  String _buildLog(List<TestLogEntry> logs) {
+  String _buildLogs(LinkedHashMap<String, List<TestLogEntry>> logs) {
     var logsListBuffer = StringBuffer();
-    var i = 1;
-    logs.forEach((logEntry) {
-      logsListBuffer.write("""<li class="list-group-item ${_mapStatusToLiType(logEntry.status)}"><p class="text-monospace">[${logEntry.status}] #${i++} ${_formatMessage(logEntry.message)}</p></li>""");
+    logs.forEach((key, value) {
+      if (value.isNotEmpty) {
+        logsListBuffer.write("""<h2>$key:</h2><br/>${_buildLog(value)}<br/>""");
+      }
     });
     final logsList = logsListBuffer.toString();
+    return logsList;
+  }
+
+  String _buildLog(List<TestLogEntry> log) {
+    var logListBuffer = StringBuffer();
+    var i = 1;
+    log.forEach((logEntry) {
+      logListBuffer.write("""<li class="list-group-item ${_mapStatusToLiType(logEntry.status)}"><p class="text-monospace">[${logEntry.status}] #${i++} ${_formatMessage(logEntry.message)}</p></li>""");
+    });
+    final logsList = logListBuffer.toString();
     return '<ul class="list-group">$logsList</ul>';
   }
 
